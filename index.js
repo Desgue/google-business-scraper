@@ -1,5 +1,8 @@
 import puppeteer from 'puppeteer';
 import fs from "fs"
+const SEARCH_TERM = "salão aveiro"
+const GOOGLE_MAPS = 'https://www.google.com/maps/'
+const DEFAULT_DELAY = 5000
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -11,18 +14,19 @@ function sleep(ms) {
       await page.evaluate(`document.querySelector("${scrollContainer}").scrollTo(0, document.querySelector("${scrollContainer}").scrollHeight)`);
       await sleep(DEFAULT_DELAY)
       let newHeight = await page.evaluate(`document.querySelector("${scrollContainer}").scrollHeight`);
-    if (newHeight === lastHeight){
-        break;
-    }
-    lastHeight = newHeight
+      if (newHeight === lastHeight){
+          break;
+        }
+        lastHeight = newHeight
     }
   }
 
   async function extractDetails(page, url){
       await page.goto(url)
-      console.log(`scraping url: ${url}`)
     //sleep(1000)
     let name, link, phone, address;
+
+    let google_url = url
     try {
         name = await page.$eval("#QA0Szd > div > div > div.w6VYqd > div.bJzME.tTVLSc > div > div.e07Vkf.kA9KIf > div > div > div.TIHn2 > div > div.lMbq3e > div:nth-child(1) > h1", el => el.innerText)
     } catch {
@@ -46,6 +50,7 @@ function sleep(ms) {
     
 
     return {
+        google_url: google_url,
         name: name,
         link: link && link.replace('\n', "") , 
         phone: phone ,
@@ -56,9 +61,7 @@ function sleep(ms) {
 
 const browser = await puppeteer.launch({headless: true});
 const page = await browser.newPage();
-const SEARCH_TERM = "barbearia aveiro"
-const GOOGLE_MAPS = 'https://www.google.com/maps/'
-const DEFAULT_DELAY = 1000
+
 
 // Navigate the page to a URL.
 await page.goto(GOOGLE_MAPS);
@@ -82,16 +85,21 @@ let businessLinks = await page.$$eval("a.hfpxzc", links => links.map(link => lin
 
 let data = []
 
-console.log(businessLinks)
+console.log(`Scraped ${businessLinks.length} links`)
+
+let linksExtracted = 0;
 for (let link of businessLinks){
   
     let detail = await extractDetails(page, link)
     data = [...data, detail]
+    linksExtracted += 1
 }
+
+console.log(`Extracted ${linksExtracted} links`)
 
 let jsonData = JSON.stringify(data, null, 2)
 
-fs.writeFile(`./${SEARCH_TERM}_DATA.json`, jsonData, function(err){
+fs.writeFile(`./${SEARCH_TERM.replace(" ", "_")}_data.json`, jsonData, function(err){
     if (err) {
         console.log(err)
     }
