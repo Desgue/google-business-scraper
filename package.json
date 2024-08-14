@@ -1,0 +1,21 @@
+{
+  "name": "google-business-scraper",
+  "version": "1.0.0",
+  "description": "Scraping tool to generate leads from google business",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "scrape",
+    "google",
+    "business",
+    "lead"
+  ],
+  "author": "eduardo guedes",
+  "license": "ISC",
+  "dependencies": {
+    "puppeteer": "^23.0.2"
+  },
+  "type": "module"
+}
