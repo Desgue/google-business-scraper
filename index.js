@@ -33,7 +33,7 @@ function sleep(ms) {
         name = ""
     }
     try{
-        link = await page.$eval("a.CsEnBe > div > div.rogA2c.ITvuef > div.Io6YTe.fontBodyMedium.kR99db ", el => el.innerText)
+        link = await page.$eval("a.CsEnBe", el => el.href)
     } catch{
         link = ""
     }
