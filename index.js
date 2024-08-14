@@ -1,8 +1,10 @@
 import puppeteer from 'puppeteer';
 import fs from "fs"
-const SEARCH_TERM = "salão aveiro"
+import { cidadesSaoPaulo } from './cidades.js';
+
+const SEARCH_TERM = "salão beleza são paulo"
 const GOOGLE_MAPS = 'https://www.google.com/maps/'
-const DEFAULT_DELAY = 5000
+const DEFAULT_DELAY = 3000
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -59,20 +61,17 @@ function sleep(ms) {
     
 }
 
-const browser = await puppeteer.launch({headless: true});
-const page = await browser.newPage();
+function generateTermsList(searchTerm, cities) {
+    return cities.map(city => `${searchTerm} ${city}`);
+}
 
 
+async function scrape(page, searchTerm) {
+    console.log(`scraping ${searchTerm}`)
 // Navigate the page to a URL.
-await page.goto(GOOGLE_MAPS);
- 
-// Set screen size.
-await page.setViewport({width: 1080, height: 1024});
 
-// click cookies 
-await page.locator('::-p-aria(Aceitar tudo)').click();
 // Type into search box.
-await page.locator('#searchboxinput').fill(SEARCH_TERM);
+await page.locator('#searchboxinput').fill(searchTerm);
 
 // Wait and click on first result.
 await page.locator('#searchbox-searchbutton').click();
@@ -99,13 +98,36 @@ console.log(`Extracted ${linksExtracted} links`)
 
 let jsonData = JSON.stringify(data, null, 2)
 
-fs.writeFile(`./${SEARCH_TERM.replace(" ", "_")}_data.json`, jsonData, function(err){
-    if (err) {
-        console.log(err)
-    }
-    else {
-        console.log("file written")
-    }
-})
+
+await (async function(searchTerm) {
+    fs.writeFile(`./data/${searchTerm.replace(/ /g, "_")}_data.json`, jsonData, function(err){
+        if (err) {
+            console.log(err)
+        }
+        else {
+            console.log("file written")
+        }
+        })
+}(searchTerm))
+
+
+
+return
+}
+
+const browser = await puppeteer.launch({headless: true});
+const page = await browser.newPage();
+await page.goto(GOOGLE_MAPS);
+// Set screen size.
+await page.setViewport({width: 1080, height: 1024});
+// click cookies 
+await page.locator('::-p-aria(Aceitar tudo)').click();
+
+let searchTerms = generateTermsList("clínica de estética", cidadesSaoPaulo )
+
+for (let term of searchTerms){
+    await scrape(page, term)
+}
+
 
 await browser.close()
