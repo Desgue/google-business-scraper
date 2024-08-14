@@ -2,7 +2,6 @@ import puppeteer from 'puppeteer';
 import fs from "fs"
 import { cidadesSaoPaulo } from './cidades.js';
 
-const SEARCH_TERM = "salão beleza são paulo"
 const GOOGLE_MAPS = 'https://www.google.com/maps/'
 const DEFAULT_DELAY = 3000
 
@@ -24,7 +23,18 @@ function sleep(ms) {
   }
 
   async function extractDetails(page, url){
-      await page.goto(url)
+    try {
+        await page.goto(url)
+    } catch(error) {
+        console.error(error)
+        return {
+            google_url: url,
+            name: "",
+            link: "" , 
+            phone: "" ,
+            address: "", 
+        }
+    }
     //sleep(1000)
     let name, link, phone, address;
 
@@ -67,7 +77,7 @@ function generateTermsList(searchTerm, cities) {
 
 
 async function scrape(page, searchTerm) {
-    console.log(`scraping ${searchTerm}`)
+console.log(`scraping ${searchTerm}`)
 // Navigate the page to a URL.
 
 // Type into search box.
@@ -123,7 +133,7 @@ await page.setViewport({width: 1080, height: 1024});
 // click cookies 
 await page.locator('::-p-aria(Aceitar tudo)').click();
 
-let searchTerms = generateTermsList("clínica de estética", cidadesSaoPaulo )
+let searchTerms = generateTermsList("clínica de estética", cidadesSaoPaulo.slice(132) )
 
 for (let term of searchTerms){
     await scrape(page, term)
