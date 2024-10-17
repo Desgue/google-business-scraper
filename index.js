@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer';
 import fs from "fs"
-import { cidadesSaoPaulo } from './cidades.js';
+import { cidadesSaoPaulo, municipiosRS, municipiosRioDeJaneiro } from './cidades.js';
 
 const GOOGLE_MAPS = 'https://www.google.com/maps/'
 const DEFAULT_DELAY = 3000
@@ -12,13 +12,20 @@ function sleep(ms) {
     await page.waitForSelector(scrollContainer, {visible: true})
     let lastHeight = await page.evaluate(`document.querySelector("${scrollContainer}").scrollHeight`);
     while (true) {
-      await page.evaluate(`document.querySelector("${scrollContainer}").scrollTo(0, document.querySelector("${scrollContainer}").scrollHeight)`);
-      await sleep(DEFAULT_DELAY)
-      let newHeight = await page.evaluate(`document.querySelector("${scrollContainer}").scrollHeight`);
-      if (newHeight === lastHeight){
-          break;
+        try{
+
+            await page.evaluate(`document.querySelector("${scrollContainer}").scrollTo(0, document.querySelector("${scrollContainer}").scrollHeight)`);
+            await sleep(DEFAULT_DELAY)
+            let newHeight = await page.evaluate(`document.querySelector("${scrollContainer}").scrollHeight`);
+            if (newHeight === lastHeight){
+                break;
+            }
+            lastHeight = newHeight
         }
-        lastHeight = newHeight
+        catch (e) {
+            console.error(e)
+            break;
+        }
     }
   }
 
@@ -110,7 +117,7 @@ let jsonData = JSON.stringify(data, null, 2)
 
 
 await (async function(searchTerm) {
-    fs.writeFile(`./data/${searchTerm.replace(/ /g, "_")}_data.json`, jsonData, function(err){
+    fs.writeFile(`./data/rs/${searchTerm.replace(/ /g, "_")}_data.json`, jsonData, function(err){
         if (err) {
             console.log(err)
         }
@@ -133,10 +140,11 @@ await page.setViewport({width: 1080, height: 1024});
 // click cookies 
 await page.locator('::-p-aria(Aceitar tudo)').click();
 
-let searchTerms = generateTermsList("clínica de estética", cidadesSaoPaulo.slice(132) )
+let searchTerms = generateTermsList("clínica de estética", municipiosRS.splice(95) )
 
-for (let term of searchTerms){
-    await scrape(page, term)
+for (let i in searchTerms){
+    await scrape(page, searchTerms[i])
+    console.log(`Last Index was ${i}`)
 }
 
 
